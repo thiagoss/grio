@@ -1,0 +1,6 @@
+[package]
+name = "grio"
+version = "0.1.0"
+authors = ["Thiago Santos <thiagossantos@gmail.com>"]
+
+[dependencies]
