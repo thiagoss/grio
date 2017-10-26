@@ -1,4 +1,9 @@
 use std::env;
+extern crate gstreamer;
+use gstreamer as gst;
+use gst::prelude::*;
+
+extern crate glib;
 
 #[derive(Debug)]
 enum MediaFormat {
@@ -36,10 +41,39 @@ impl Config {
     }
 }
 
+fn transcode(config : Config) {
+    let pipeline = gst::Pipeline::new("transcoder");
+    let uridecodebin = gst::ElementFactory::make("uridecodebin", None).unwrap();
+    uridecodebin.set_property("uri", &glib::Value::from(&config.input)).unwrap();
+
+    pipeline.add(&uridecodebin).unwrap();
+
+    pipeline.set_state(gst::State::Playing);
+    let bus = pipeline.get_bus().unwrap();
+
+    while let Some(msg) = bus.timed_pop(gst::CLOCK_TIME_NONE) {
+        use gst::MessageView;
+        match msg.view() {
+            MessageView::Eos(..) => break,
+            MessageView::Error(err) => {
+                println!("Error from {}: {} ({:?})",
+                        msg.get_src().get_path_string(), err.get_error(),
+                        err.get_debug());
+                break;
+            }
+            _ => (),
+        }
+    }
+
+    pipeline.set_state(gst::State::Null);
+}
+
 
 fn main() {
+    gst::init().unwrap();
     let args: Vec<String> = env::args().collect();
-    let config = Config::new(&args);
+    let config = Config::new(&args).unwrap();
 
     println!("Config: {:?}", config);
+    transcode(config);
 }
