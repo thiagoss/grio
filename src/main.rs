@@ -48,6 +48,24 @@ fn transcode(config : Config) {
 
     pipeline.add(&uridecodebin).unwrap();
 
+    let pipeline_clone = pipeline.clone();
+    uridecodebin.connect_pad_added(move |_, src_pad| {
+        let queue = gst::ElementFactory::make("queue", None).unwrap();
+        let fakesink = gst::ElementFactory::make("fakesink", None).unwrap();
+        let pipeline = &pipeline_clone;
+
+        pipeline.add(&queue).unwrap();
+        pipeline.add(&fakesink).unwrap();
+
+        queue.link(&fakesink).unwrap();
+
+        queue.sync_state_with_parent().unwrap();
+        fakesink.sync_state_with_parent().unwrap();
+
+        let sink_pad = queue.get_static_pad("sink").unwrap();
+        assert_eq!(src_pad.link(&sink_pad), gst::PadLinkReturn::Ok);
+    });
+
     pipeline.set_state(gst::State::Playing);
     let bus = pipeline.get_bus().unwrap();
 
