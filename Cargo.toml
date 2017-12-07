@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["Thiago Santos <thiagossantos@gmail.com>"]
 
 [dependencies]
-glib = "0.3"
-gstreamer = "0.8.1"
+glib = { git="http://github.com/gtk-rs/glib" }
+gstreamer = { git="http://github.com/thiagoss/gstreamer-rs" }
+gstreamer-pbutils = { git="http://github.com/thiagoss/gstreamer-rs" }
